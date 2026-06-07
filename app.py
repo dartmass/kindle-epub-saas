@@ -18,7 +18,7 @@ ALLOWED_EXT = {'.docx'}
 
 # ── 1日3回制限 ──────────────────────────────────
 FREE_DAILY_LIMIT = 3
-POLAR_CHECKOUT_URL = 'https://polar.sh/YOUR_ORG/YOUR_PRODUCT'  # TODO: Polar設定後に差し替え
+POLAR_CHECKOUT_URL = 'https://buy.polar.sh/polar_cl_Fx0hv2pJ7nK6Okt64Giq7VPHpSAMb9Tx8cLlB36iZnq'
 
 usage_tracker: dict[str, int] = defaultdict(int)
 
