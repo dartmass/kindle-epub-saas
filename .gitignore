@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+*.epub
+*.docx
+epub_preview/
+converted_test.epub
+.env
+venv/
