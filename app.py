@@ -21,8 +21,8 @@ HTML = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>縦書きEPUBコンバーター | Word原稿をそのままKindleへ</title>
-  <meta name="description" content="WordファイルをKindle対応の縦書きEPUBに変換。ルビ・見出し・表を自動処理。アップロードするだけ、数秒で完成。">
+  <title>縦書きEPUBコンバーター | Kindle出版のEPUB地獄から解放</title>
+  <meta name="description" content="ルビのHTML手打ち、縦書きCSS、Kindleでの崩れ確認……その作業、もう不要です。WordファイルをアップロードするだけでKindle対応EPUBが完成。">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -128,6 +128,33 @@ HTML = """
     .hero-btn:hover { background: var(--indigo-dark); transform: translateY(-1px); }
     .hero-sub { margin-top: 14px; font-size: 0.82em; color: var(--muted); }
 
+    /* ── PAIN ── */
+    .pain-section {
+      background: #1e1b4b;
+      color: #e0e7ff;
+      padding: 64px 24px;
+    }
+    .pain-section .section-label { color: #a5b4fc; }
+    .pain-section .section-title { color: #fff; }
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 860px;
+      margin: 40px auto 0;
+    }
+    .pain-item {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 22px 20px;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    .pain-item .pain-emoji { font-size: 1.6em; margin-bottom: 10px; display: block; }
+    .pain-item strong { color: #fff; display: block; margin-bottom: 4px; }
+    .pain-item span { color: #a5b4fc; font-size: 0.88em; }
+
     /* ── FEATURES ── */
     .features-section {
       background: #fff;
@@ -150,19 +177,41 @@ HTML = """
       font-weight: 800;
       margin-bottom: 48px;
     }
-    .features-grid {
+    .release-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
       max-width: 900px;
       margin: 0 auto;
     }
-    .feature-card {
-      background: var(--bg);
+    .release-card {
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
     }
+    .release-card .rc-icon {
+      width: 40px; height: 40px; min-width: 40px;
+      background: var(--indigo-light);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3em;
+    }
+    .release-card h3 { font-size: 0.95em; font-weight: 700; margin-bottom: 4px; }
+    .release-card .before {
+      font-size: 0.8em;
+      color: #ef4444;
+      text-decoration: line-through;
+      margin-bottom: 2px;
+    }
+    .release-card .after {
+      font-size: 0.82em;
+      color: var(--green);
+      font-weight: 600;
+    }
+
     .feature-icon { font-size: 2em; margin-bottom: 12px; }
     .feature-card h3 { font-size: 1em; font-weight: 700; margin-bottom: 6px; }
     .feature-card p { font-size: 0.85em; color: var(--muted); line-height: 1.6; }
@@ -314,37 +363,77 @@ HTML = """
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">✨ Kindle出版をもっとかんたんに</div>
-  <h1>Word原稿を、<br><em>そのままKindleへ。</em></h1>
-  <p>ルビ・縦書き・表・見出しを自動変換。<br>面倒な書式設定は不要。アップロードするだけで、出版社クオリティのEPUBが完成します。</p>
-  <a class="hero-btn" href="#converter">今すぐ無料で変換する →</a>
-  <div class="hero-sub">クレジットカード不要・登録なし・今すぐ使える</div>
+  <div class="hero-eyebrow">📖 Kindle自費出版者のための変換ツール</div>
+  <h1>EPUBの<em>地獄</em>、<br>もう終わりにしよう。</h1>
+  <p>縦書きCSS、ルビのHTML書き直し、Kindleビューワーでの崩れ確認……<br>原稿を書き終えた後に待ち構える、あの作業地獄から解放します。</p>
+  <a class="hero-btn" href="#converter">今すぐ無料で試す →</a>
+  <div class="hero-sub">登録不要・カード不要・アップロードするだけ</div>
 </section>
 
-<!-- FEATURES -->
+<!-- PAIN -->
+<section class="pain-section">
+  <div class="section-label" style="text-align:center">こんな経験、ありませんか？</div>
+  <div class="section-title" style="text-align:center">Kindle出版の「書式地獄」</div>
+  <div class="pain-grid">
+    <div class="pain-item">
+      <span class="pain-emoji">😩</span>
+      <strong>ルビを全部手打ちした</strong>
+      <span>&lt;ruby&gt;漱石&lt;rt&gt;そうせき&lt;/rt&gt;&lt;/ruby&gt; を原稿の全ページ分……</span>
+    </div>
+    <div class="pain-item">
+      <span class="pain-emoji">🕐</span>
+      <strong>縦書きCSSで3時間溶けた</strong>
+      <span>writing-modeって何？ vertical-rl？ ネットを調べ続けて日が暮れた。</span>
+    </div>
+    <div class="pain-item">
+      <span class="pain-emoji">💀</span>
+      <strong>Kindleビューワーで崩れた</strong>
+      <span>やっと変換できたと思ったら、レイアウトが全崩れ。最初からやり直し。</span>
+    </div>
+    <div class="pain-item">
+      <span class="pain-emoji">💸</span>
+      <strong>外注に数万円払った</strong>
+      <span>「自分でできないならプロに頼むしかない」——もったいなかった。</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES（解放リスト） -->
 <section class="features-section">
-  <div class="section-label">できること</div>
-  <div class="section-title">他のツールには<br>できないことがある</div>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">🈶</div>
-      <h3>ルビ（振り仮名）を自動保持</h3>
-      <p>Wordのルビがそのま EPUBの &lt;ruby&gt; タグに変換。Kindleでも正しく表示されます。</p>
+  <div class="section-label">解決策</div>
+  <div class="section-title">もうやらなくていい。<br>全部、自動でやります。</div>
+  <div class="release-grid">
+    <div class="release-card">
+      <div class="rc-icon">🈶</div>
+      <div>
+        <h3>ルビ（振り仮名）</h3>
+        <div class="before">全ページ手動でHTML書き直し</div>
+        <div class="after">→ Wordのルビがそのまま自動変換</div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">📜</div>
-      <h3>縦書きCSS完全対応</h3>
-      <p>writing-mode: vertical-rl を適用。日本語小説・エッセイにふさわしい縦書きレイアウトを実現。</p>
+    <div class="release-card">
+      <div class="rc-icon">📜</div>
+      <div>
+        <h3>縦書きレイアウト</h3>
+        <div class="before">縦書きCSSを自分で書く</div>
+        <div class="after">→ Kindle対応の縦書きを自動適用</div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">🔢</div>
-      <h3>縦中横（数字処理）</h3>
-      <p>縦書き中の数字を自動で縦中横処理。「令和６年」「第２章」などが正しく組まれます。</p>
+    <div class="release-card">
+      <div class="rc-icon">🔢</div>
+      <div>
+        <h3>数字の縦中横</h3>
+        <div class="before">「第２章」が横倒しになって恥ずかしい</div>
+        <div class="after">→ 縦書き中の数字を自動で正立処理</div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <h3>表・見出し自動検出</h3>
-      <p>Wordの表をHTMLテーブルに変換。フォントサイズや太字から見出しレベルを自動推定します。</p>
+    <div class="release-card">
+      <div class="rc-icon">📊</div>
+      <div>
+        <h3>表・見出し</h3>
+        <div class="before">表とスタイルを手動でHTMLに変換</div>
+        <div class="after">→ Word構造をそのまま自動認識</div>
+      </div>
     </div>
   </div>
 </section>
