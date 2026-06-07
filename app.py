@@ -3,8 +3,9 @@ Kindle SaaS MVP - Flask Web App
 Word (.docx) をアップロード → 縦書きEPUBをダウンロード
 """
 import os
-import uuid
 import tempfile
+from collections import defaultdict
+from datetime import date
 from pathlib import Path
 from flask import Flask, request, send_file, jsonify, render_template_string
 
@@ -14,6 +15,25 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20MB上限
 
 ALLOWED_EXT = {'.docx'}
+
+# ── 1日3回制限 ──────────────────────────────────
+FREE_DAILY_LIMIT = 3
+POLAR_CHECKOUT_URL = 'https://polar.sh/YOUR_ORG/YOUR_PRODUCT'  # TODO: Polar設定後に差し替え
+
+usage_tracker: dict[str, int] = defaultdict(int)
+
+def get_client_ip() -> str:
+    """Renderのリバースプロキシ経由でも正しいIPを取得"""
+    xff = request.headers.get('X-Forwarded-For', '')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.remote_addr or '0.0.0.0'
+
+def usage_key(ip: str) -> str:
+    return f"{ip}_{date.today().isoformat()}"
+
+def get_remaining(ip: str) -> int:
+    return max(0, FREE_DAILY_LIMIT - usage_tracker[usage_key(ip)])
 
 HTML = """
 <!DOCTYPE html>
@@ -502,6 +522,23 @@ HTML = """
 
     <div class="loading" id="loading">⏳ 変換中です。しばらくお待ちください…</div>
     <div class="result" id="result"></div>
+
+    <!-- 残り回数バッジ -->
+    <div id="usageBadge" style="margin-top:20px;text-align:center;font-size:0.85em;color:var(--muted);display:none">
+      今日の残り回数：<strong id="remainingCount"></strong> / 3回
+    </div>
+
+    <!-- 上限超過バナー -->
+    <div id="limitBanner" style="display:none;margin-top:24px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:24px;text-align:center">
+      <div style="font-size:1.5em;margin-bottom:8px">⚡</div>
+      <div style="font-weight:800;font-size:1.05em;margin-bottom:6px">本日の無料枠（3回）を使い切りました</div>
+      <div style="font-size:0.88em;color:#92400e;margin-bottom:20px">明日0時にリセットされます。今すぐ続けたい方はProプランへ。</div>
+      <a id="polarBtn" href="#" target="_blank"
+        style="display:inline-block;background:#4f46e5;color:#fff;border-radius:8px;padding:12px 32px;font-weight:800;text-decoration:none;font-size:0.95em">
+        🚀 Proプランにアップグレード（¥980/月）
+      </a>
+      <div style="margin-top:10px;font-size:0.78em;color:#92400e">変換回数無制限・いつでもキャンセル可</div>
+    </div>
   </div>
 </section>
 
@@ -544,14 +581,51 @@ HTML = """
 </footer>
 
 <script>
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const fileName  = document.getElementById('fileName');
-const form      = document.getElementById('form');
-const btn       = document.getElementById('btn');
-const loading   = document.getElementById('loading');
-const resultDiv = document.getElementById('result');
+const dropZone      = document.getElementById('dropZone');
+const fileInput     = document.getElementById('fileInput');
+const fileName      = document.getElementById('fileName');
+const form          = document.getElementById('form');
+const btn           = document.getElementById('btn');
+const loading       = document.getElementById('loading');
+const resultDiv     = document.getElementById('result');
+const usageBadge    = document.getElementById('usageBadge');
+const remainingCount= document.getElementById('remainingCount');
+const limitBanner   = document.getElementById('limitBanner');
+const polarBtn      = document.getElementById('polarBtn');
 
+let polarUrl = '#';
+
+// ── ページロード時：残り回数を取得 ──
+async function loadUsage() {
+  try {
+    const res = await fetch('/usage');
+    const data = await res.json();
+    polarUrl = data.polar_url || '#';
+    polarBtn.href = polarUrl;
+    updateUsageUI(data.remaining);
+  } catch (e) { /* サイレントに失敗 */ }
+}
+
+function updateUsageUI(remaining) {
+  if (remaining <= 0) {
+    // 上限超過：フォームを隠してバナー表示
+    form.style.display = 'none';
+    usageBadge.style.display = 'none';
+    limitBanner.style.display = 'block';
+    polarBtn.href = polarUrl;
+  } else {
+    form.style.display = 'block';
+    limitBanner.style.display = 'none';
+    usageBadge.style.display = 'block';
+    remainingCount.textContent = remaining;
+    // 残り1回なら警告色
+    remainingCount.style.color = remaining === 1 ? '#ef4444' : '#111827';
+  }
+}
+
+loadUsage();
+
+// ── ファイル選択 ──
 dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
   if (fileInput.files[0]) {
@@ -574,6 +648,7 @@ dropZone.addEventListener('drop', e => {
   }
 });
 
+// ── 変換送信 ──
 form.addEventListener('submit', async e => {
   e.preventDefault();
   if (!fileInput.files[0]) { alert('ファイルを選択してください'); return; }
@@ -589,17 +664,30 @@ form.addEventListener('submit', async e => {
 
   try {
     const res = await fetch('/convert', { method: 'POST', body: fd });
+
+    if (res.status === 429) {
+      // 上限超過
+      const json = await res.json().catch(() => ({}));
+      updateUsageUI(0);
+      loading.style.display = 'none';
+      btn.disabled = false;
+      return;
+    }
+
     if (res.ok) {
       const blob = await res.blob();
       const epubName = fileInput.files[0].name.replace('.docx', '.epub');
       const url = URL.createObjectURL(blob);
-      const warnings = res.headers.get('X-Warnings') || '';
+      const warnings  = res.headers.get('X-Warnings') || '';
+      const remaining = parseInt(res.headers.get('X-Remaining') ?? '99', 10);
+
       resultDiv.className = 'result success';
       resultDiv.innerHTML = `
         <strong>✅ 変換完了！</strong><br>EPUBファイルの準備ができました。
         <br><a href="${url}" download="${epubName}">⬇ ${epubName} をダウンロード</a>
         ${warnings ? '<div class="warnings">⚠️ ' + decodeURIComponent(warnings) + '</div>' : ''}
       `;
+      updateUsageUI(remaining);
     } else {
       const json = await res.json().catch(() => ({}));
       resultDiv.className = 'result error';
@@ -625,8 +713,31 @@ def index():
     return render_template_string(HTML)
 
 
+@app.route('/usage', methods=['GET'])
+def usage_status():
+    """残り回数をJSONで返す（ページロード時に取得）"""
+    ip = get_client_ip()
+    remaining = get_remaining(ip)
+    return jsonify({
+        'remaining': remaining,
+        'limit': FREE_DAILY_LIMIT,
+        'polar_url': POLAR_CHECKOUT_URL,
+    })
+
+
 @app.route('/convert', methods=['POST'])
 def convert():
+    ip = get_client_ip()
+    key = usage_key(ip)
+
+    # 1日の上限チェック
+    if usage_tracker[key] >= FREE_DAILY_LIMIT:
+        return jsonify({
+            'error': 'limit',
+            'message': '本日の無料変換回数（3回）に達しました。明日またご利用いただくか、Proプランにアップグレードしてください。',
+            'polar_url': POLAR_CHECKOUT_URL,
+        }), 429
+
     f = request.files.get('file')
     if not f:
         return jsonify({'error': 'ファイルがありません'}), 400
@@ -647,6 +758,10 @@ def convert():
         except Exception as e:
             return jsonify({'error': f'変換エラー: {str(e)}'}), 500
 
+        # 変換成功 → カウントアップ
+        usage_tracker[key] += 1
+        remaining = get_remaining(ip)
+
         warnings_str = ' / '.join(result.get('warnings', []))
 
         response = send_file(
@@ -657,6 +772,8 @@ def convert():
         )
         if warnings_str:
             response.headers['X-Warnings'] = warnings_str[:500]
+        response.headers['X-Remaining'] = str(remaining)
+        response.headers['Access-Control-Expose-Headers'] = 'X-Warnings, X-Remaining'
         return response
 
 
