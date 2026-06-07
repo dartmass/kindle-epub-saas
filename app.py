@@ -21,158 +21,437 @@ HTML = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>縦書きEPUB変換 - Kindle出版かんたんツール</title>
+  <title>縦書きEPUBコンバーター | Word原稿をそのままKindleへ</title>
+  <meta name="description" content="WordファイルをKindle対応の縦書きEPUBに変換。ルビ・見出し・表を自動処理。アップロードするだけ、数秒で完成。">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --indigo: #4f46e5;
+      --indigo-dark: #4338ca;
+      --indigo-light: #eef2ff;
+      --green: #16a34a;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9fafb;
+    }
     body {
-      font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-      background: #fafafa;
-      color: #222;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 16px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-      padding: 40px;
-      max-width: 560px;
-      width: 100%;
-    }
-    h1 {
-      font-size: 1.4em;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      color: #666;
-      font-size: 0.9em;
-      margin-bottom: 32px;
+      font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.6;
     }
-    .drop-zone {
-      border: 2px dashed #ccc;
+
+    /* ── NAV ── */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-weight: 800; font-size: 1.1em; color: var(--indigo); letter-spacing: -0.5px; }
+    .nav-badge {
+      background: var(--indigo-light);
+      color: var(--indigo);
+      font-size: 0.72em;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      margin-left: 8px;
+    }
+    .nav-cta {
+      background: var(--indigo);
+      color: #fff;
+      border: none;
       border-radius: 8px;
-      padding: 40px 20px;
+      padding: 8px 20px;
+      font-size: 0.9em;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .nav-cta:hover { background: var(--indigo-dark); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 64px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: var(--indigo-light);
+      color: var(--indigo);
+      font-size: 0.82em;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 99px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(1.8em, 4vw, 2.8em);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+    .hero h1 em {
+      color: var(--indigo);
+      font-style: normal;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05em;
+      margin-bottom: 36px;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-btn {
+      display: inline-block;
+      background: var(--indigo);
+      color: #fff;
+      border-radius: 10px;
+      padding: 14px 36px;
+      font-size: 1.05em;
+      font-weight: 800;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .hero-btn:hover { background: var(--indigo-dark); transform: translateY(-1px); }
+    .hero-sub { margin-top: 14px; font-size: 0.82em; color: var(--muted); }
+
+    /* ── FEATURES ── */
+    .features-section {
+      background: #fff;
+      padding: 64px 24px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      text-align: center;
+      font-size: 0.8em;
+      font-weight: 700;
+      color: var(--indigo);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.3em, 3vw, 1.9em);
+      font-weight: 800;
+      margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .feature-icon { font-size: 2em; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1em; font-weight: 700; margin-bottom: 6px; }
+    .feature-card p { font-size: 0.85em; color: var(--muted); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { padding: 64px 24px; max-width: 700px; margin: 0 auto; text-align: center; }
+    .steps { display: flex; flex-direction: column; gap: 0; margin-top: 40px; text-align: left; }
+    .step { display: flex; gap: 20px; align-items: flex-start; padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 36px; height: 36px; min-width: 36px;
+      background: var(--indigo);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9em;
+    }
+    .step h3 { font-size: 1em; font-weight: 700; margin-bottom: 4px; }
+    .step p { font-size: 0.88em; color: var(--muted); }
+
+    /* ── CONVERTER ── */
+    .converter-section {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 64px 24px;
+    }
+    .converter-wrap {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 44px 20px;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
       margin-bottom: 20px;
+      background: var(--bg);
     }
-    .drop-zone.dragover {
-      border-color: #4f46e5;
-      background: #eef2ff;
-    }
+    .drop-zone.dragover { border-color: var(--indigo); background: var(--indigo-light); }
     .drop-zone input { display: none; }
-    .drop-zone .icon { font-size: 2.5em; margin-bottom: 10px; }
-    .drop-zone .label { color: #555; font-size: 0.95em; }
-    .drop-zone .file-name {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #4f46e5;
-    }
-    label.meta { display: block; font-size: 0.85em; margin-bottom: 4px; color: #444; }
+    .drop-zone .dz-icon { font-size: 2.8em; margin-bottom: 12px; }
+    .drop-zone .dz-label { color: var(--muted); font-size: 0.95em; line-height: 1.7; }
+    .drop-zone .dz-label strong { color: var(--indigo); }
+    .drop-zone .dz-filename { margin-top: 10px; font-weight: 700; color: var(--indigo); font-size: 0.95em; }
+    .meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .meta-group label { display: block; font-size: 0.82em; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
     input[type=text] {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.95em;
-      margin-bottom: 16px;
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.93em;
+      outline: none; transition: border-color 0.2s;
     }
-    button[type=submit] {
-      width: 100%;
-      background: #4f46e5;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 1em;
-      font-weight: bold;
-      cursor: pointer;
+    input[type=text]:focus { border-color: var(--indigo); }
+    .convert-btn {
+      width: 100%; background: var(--indigo); color: #fff;
+      border: none; border-radius: 10px; padding: 15px;
+      font-size: 1.05em; font-weight: 800; cursor: pointer;
       transition: background 0.2s;
     }
-    button[type=submit]:hover { background: #4338ca; }
-    button[type=submit]:disabled { background: #a5b4fc; cursor: not-allowed; }
-    .result {
-      margin-top: 24px;
-      padding: 16px;
-      border-radius: 8px;
-      font-size: 0.9em;
-      display: none;
-    }
-    .result.success {
-      background: #f0fdf4;
-      border: 1px solid #86efac;
-      color: #166534;
-    }
-    .result.error {
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
-      color: #991b1b;
-    }
+    .convert-btn:hover { background: var(--indigo-dark); }
+    .convert-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .loading { display: none; text-align: center; color: var(--muted); margin-top: 20px; font-size: 0.95em; }
+    .result { margin-top: 20px; padding: 20px; border-radius: 10px; font-size: 0.9em; display: none; }
+    .result.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .result.error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
     .result a {
-      display: inline-block;
-      margin-top: 12px;
-      background: #16a34a;
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
+      display: inline-block; margin-top: 14px;
+      background: var(--green); color: #fff;
+      padding: 11px 28px; border-radius: 8px;
+      text-decoration: none; font-weight: 700; font-size: 1em;
     }
-    .warnings { margin-top: 8px; color: #92400e; font-size: 0.85em; }
-    .loading { display: none; text-align: center; color: #666; margin-top: 16px; }
-    .features {
-      margin-top: 32px;
+    .warnings { margin-top: 10px; color: #92400e; font-size: 0.83em; }
+
+    /* ── PRICING ── */
+    .pricing-section { padding: 64px 24px; }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      max-width: 640px;
+      margin: 40px auto 0;
+    }
+    .pricing-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      position: relative;
+    }
+    .pricing-card.featured {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px var(--indigo-light);
+    }
+    .pricing-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--indigo); color: #fff;
+      font-size: 0.72em; font-weight: 700;
+      padding: 3px 12px; border-radius: 99px;
+      white-space: nowrap;
+    }
+    .pricing-name { font-size: 0.9em; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+    .pricing-price { font-size: 2.2em; font-weight: 900; margin-bottom: 4px; }
+    .pricing-price span { font-size: 0.45em; font-weight: 500; color: var(--muted); }
+    .pricing-desc { font-size: 0.85em; color: var(--muted); margin-bottom: 20px; }
+    .pricing-features { list-style: none; font-size: 0.88em; }
+    .pricing-features li { padding: 5px 0; }
+    .pricing-features li::before { content: "✓　"; color: var(--green); font-weight: 700; }
+    .pricing-cta {
+      display: block; width: 100%; margin-top: 24px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 11px; font-size: 0.95em; font-weight: 700;
+      text-align: center; cursor: pointer; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .pricing-cta:hover { background: var(--border); }
+    .pricing-card.featured .pricing-cta {
+      background: var(--indigo); color: #fff; border-color: var(--indigo);
+    }
+    .pricing-card.featured .pricing-cta:hover { background: var(--indigo-dark); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--text);
+      color: #9ca3af;
+      text-align: center;
+      padding: 32px 24px;
       font-size: 0.82em;
-      color: #888;
-      line-height: 1.8;
     }
-    .features span { display: inline-block; margin-right: 12px; }
+    footer a { color: #9ca3af; text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      .meta-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>📖 縦書きEPUB変換</h1>
-    <p class="subtitle">
-      WordファイルをKindle対応の縦書きEPUBに変換します。<br>
-      ルビ・見出し・表に自動対応。変換後すぐダウンロードできます。
-    </p>
+
+<!-- NAV -->
+<nav>
+  <div>
+    <span class="nav-logo">📖 縦書きEPUB</span>
+    <span class="nav-badge">β版</span>
+  </div>
+  <a class="nav-cta" href="#converter">無料で試す</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">✨ Kindle出版をもっとかんたんに</div>
+  <h1>Word原稿を、<br><em>そのままKindleへ。</em></h1>
+  <p>ルビ・縦書き・表・見出しを自動変換。<br>面倒な書式設定は不要。アップロードするだけで、出版社クオリティのEPUBが完成します。</p>
+  <a class="hero-btn" href="#converter">今すぐ無料で変換する →</a>
+  <div class="hero-sub">クレジットカード不要・登録なし・今すぐ使える</div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="section-label">できること</div>
+  <div class="section-title">他のツールには<br>できないことがある</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🈶</div>
+      <h3>ルビ（振り仮名）を自動保持</h3>
+      <p>Wordのルビがそのま EPUBの &lt;ruby&gt; タグに変換。Kindleでも正しく表示されます。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📜</div>
+      <h3>縦書きCSS完全対応</h3>
+      <p>writing-mode: vertical-rl を適用。日本語小説・エッセイにふさわしい縦書きレイアウトを実現。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔢</div>
+      <h3>縦中横（数字処理）</h3>
+      <p>縦書き中の数字を自動で縦中横処理。「令和６年」「第２章」などが正しく組まれます。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>表・見出し自動検出</h3>
+      <p>Wordの表をHTMLテーブルに変換。フォントサイズや太字から見出しレベルを自動推定します。</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="section-label">使い方</div>
+  <div class="section-title">3ステップで完了</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h3>Wordファイルをアップロード</h3>
+        <p>.docx形式のファイルをドラッグ&ドロップ、またはクリックして選択するだけ。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h3>タイトル・著者名を入力（任意）</h3>
+        <p>空欄でもOK。ファイル名やWord文書のプロパティから自動取得します。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h3>EPUBをダウンロード</h3>
+        <p>数秒で変換完了。KindlePreviewerやKindleアプリですぐに確認できます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONVERTER -->
+<section class="converter-section" id="converter">
+  <div class="converter-wrap">
+    <div class="section-label" style="text-align:center">今すぐ変換</div>
+    <div class="section-title" style="text-align:center;margin-bottom:32px">Wordファイルをアップロード</div>
 
     <form id="form">
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileInput" accept=".docx">
-        <div class="icon">📄</div>
-        <div class="label">Wordファイル (.docx) をドロップ<br>またはクリックして選択</div>
-        <div class="file-name" id="fileName"></div>
+        <div class="dz-icon">📄</div>
+        <div class="dz-label">
+          <strong>クリックしてファイルを選択</strong><br>
+          またはここにドラッグ&ドロップ<br>
+          <span style="font-size:0.85em">.docx形式・最大20MB</span>
+        </div>
+        <div class="dz-filename" id="fileName"></div>
       </div>
 
-      <label class="meta">タイトル（空欄で自動検出）</label>
-      <input type="text" id="title" placeholder="例: 吾輩は猫である">
+      <div class="meta-row">
+        <div class="meta-group">
+          <label>タイトル（省略可）</label>
+          <input type="text" id="title" placeholder="例: 吾輩は猫である">
+        </div>
+        <div class="meta-group">
+          <label>著者名（省略可）</label>
+          <input type="text" id="author" placeholder="例: 夏目漱石">
+        </div>
+      </div>
 
-      <label class="meta">著者名（空欄で「著者不明」）</label>
-      <input type="text" id="author" placeholder="例: 夏目漱石">
-
-      <button type="submit" id="btn">EPUBに変換してダウンロード</button>
+      <button type="submit" class="convert-btn" id="btn">⚡ EPUBに変換してダウンロード</button>
     </form>
 
-    <div class="loading" id="loading">⏳ 変換中...</div>
-
+    <div class="loading" id="loading">⏳ 変換中です。しばらくお待ちください…</div>
     <div class="result" id="result"></div>
+  </div>
+</section>
 
-    <div class="features">
-      対応機能：
-      <span>✅ ルビ（振り仮名）</span>
-      <span>✅ 縦書きCSS</span>
-      <span>✅ 縦中横</span>
-      <span>✅ 表</span>
-      <span>✅ 見出し自動検出</span>
+<!-- PRICING -->
+<section class="pricing-section">
+  <div class="section-label" style="text-align:center">料金プラン</div>
+  <div class="section-title" style="text-align:center">シンプルな料金体系</div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-name">FREE</div>
+      <div class="pricing-price">¥0<span> / 月</span></div>
+      <div class="pricing-desc">まずは試してみたい方に</div>
+      <ul class="pricing-features">
+        <li>月3回まで変換可能</li>
+        <li>ルビ・縦書き・表対応</li>
+        <li>最大20MBのファイル</li>
+      </ul>
+      <a class="pricing-cta" href="#converter">今すぐ試す</a>
+    </div>
+    <div class="pricing-card featured">
+      <div class="pricing-badge">おすすめ</div>
+      <div class="pricing-name">PRO</div>
+      <div class="pricing-price">¥980<span> / 月</span></div>
+      <div class="pricing-desc">本格的に出版したい方に</div>
+      <ul class="pricing-features">
+        <li>変換回数 無制限</li>
+        <li>最大100MBのファイル</li>
+        <li>優先サポート</li>
+        <li>近日：一括変換・API連携</li>
+      </ul>
+      <a class="pricing-cta" href="#converter">準備中 — 通知を受け取る</a>
     </div>
   </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 縦書きEPUBコンバーター &nbsp;·&nbsp; <a href="mailto:support@example.com">お問い合わせ</a></p>
+  <p style="margin-top:8px">Kindle・Amazon は Amazon.com, Inc. の商標です。本サービスはAmazonと提携しておりません。</p>
+</footer>
 
 <script>
 const dropZone = document.getElementById('dropZone');
@@ -185,7 +464,10 @@ const resultDiv = document.getElementById('result');
 
 dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
-  if (fileInput.files[0]) fileName.textContent = fileInput.files[0].name;
+  if (fileInput.files[0]) {
+    fileName.textContent = '📎 ' + fileInput.files[0].name;
+    dropZone.style.borderColor = '#4f46e5';
+  }
 });
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -194,8 +476,11 @@ dropZone.addEventListener('drop', e => {
   dropZone.classList.remove('dragover');
   const f = e.dataTransfer.files[0];
   if (f && f.name.endsWith('.docx')) {
-    fileInput.files = e.dataTransfer.files;
-    fileName.textContent = f.name;
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    fileInput.files = dt.files;
+    fileName.textContent = '📎 ' + f.name;
+    dropZone.style.borderColor = '#4f46e5';
   }
 });
 
@@ -221,18 +506,18 @@ form.addEventListener('submit', async e => {
       const warnings = res.headers.get('X-Warnings') || '';
       resultDiv.className = 'result success';
       resultDiv.innerHTML = `
-        ✅ 変換完了！
-        <a href="${url}" download="${epubName}">⬇ ${epubName} をダウンロード</a>
+        <strong>✅ 変換完了！</strong><br>EPUBファイルの準備ができました。
+        <br><a href="${url}" download="${epubName}">⬇ ${epubName} をダウンロード</a>
         ${warnings ? '<div class="warnings">⚠️ ' + decodeURIComponent(warnings) + '</div>' : ''}
       `;
     } else {
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       resultDiv.className = 'result error';
-      resultDiv.innerHTML = '❌ ' + (json.error || '変換に失敗しました');
+      resultDiv.innerHTML = '❌ ' + (json.error || '変換に失敗しました。ファイルを確認してください。');
     }
   } catch (err) {
     resultDiv.className = 'result error';
-    resultDiv.innerHTML = '❌ 通信エラーが発生しました';
+    resultDiv.innerHTML = '❌ 通信エラーが発生しました。時間をおいて再度お試しください。';
   }
 
   resultDiv.style.display = 'block';
