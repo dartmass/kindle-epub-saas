@@ -363,11 +363,11 @@ HTML = """
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">📖 Kindle自費出版者のための変換ツール</div>
-  <h1>EPUBの<em>地獄</em>、<br>もう終わりにしよう。</h1>
-  <p>縦書きCSS、ルビのHTML書き直し、Kindleビューワーでの崩れ確認……<br>原稿を書き終えた後に待ち構える、あの作業地獄から解放します。</p>
-  <a class="hero-btn" href="#converter">今すぐ無料で試す →</a>
-  <div class="hero-sub">登録不要・カード不要・アップロードするだけ</div>
+  <div class="hero-eyebrow">✨ Kindle出版をもっとかんたんに</div>
+  <h1>Word原稿を、<br><em>そのままKindleへ。</em></h1>
+  <p>ルビ・縦書き・表・見出しを自動変換。<br>面倒な書式設定は不要。アップロードするだけで、出版社クオリティのEPUBが完成します。</p>
+  <a class="hero-btn" href="#converter">今すぐ無料で変換する →</a>
+  <div class="hero-sub">クレジットカード不要・登録なし・今すぐ使える</div>
 </section>
 
 <!-- PAIN -->
@@ -377,8 +377,8 @@ HTML = """
   <div class="pain-grid">
     <div class="pain-item">
       <span class="pain-emoji">😩</span>
-      <strong>ルビを全部手打ちした</strong>
-      <span>&lt;ruby&gt;漱石&lt;rt&gt;そうせき&lt;/rt&gt;&lt;/ruby&gt; を原稿の全ページ分……</span>
+      <strong>変換したらルビが全部消えた</strong>
+      <span>Wordで丁寧に振ったルビが、EPUBにしたら跡形もなく消えた……</span>
     </div>
     <div class="pain-item">
       <span class="pain-emoji">🕐</span>
@@ -406,9 +406,10 @@ HTML = """
     <div class="release-card">
       <div class="rc-icon">🈶</div>
       <div>
-        <h3>ルビ（振り仮名）</h3>
-        <div class="before">全ページ手動でHTML書き直し</div>
-        <div class="after">→ Wordのルビがそのまま自動変換</div>
+        <h3>ルビ（振り仮名）の保持</h3>
+        <div class="before">EPUBに変換したらルビが全部消えた</div>
+        <div class="after">→ Wordで設定したルビをそのまま保持</div>
+        <div style="font-size:0.78em;color:var(--muted);margin-top:6px">※ ルビはWordで事前に設定が必要です。自動付与はしません。</div>
       </div>
     </div>
     <div class="release-card">
