@@ -363,9 +363,9 @@ HTML = """
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">✨ Kindle出版をもっとかんたんに</div>
+  <div class="hero-eyebrow">🛠️ Kindle出版の「手作業を減らす」ためのツール</div>
   <h1>Word原稿を、<br><em>そのままKindleへ。</em></h1>
-  <p>ルビ・縦書き・表・見出しを自動変換。<br>面倒な書式設定は不要。アップロードするだけで、出版社クオリティのEPUBが完成します。</p>
+  <p>すべての原稿を完璧に変換できるわけではありません。<br>でも、縦書きCSS・ルビ保持・表・見出しの書式作業を自動化することで、<strong>あなたの手作業を大幅に減らします。</strong></p>
   <a class="hero-btn" href="#converter">今すぐ無料で変換する →</a>
   <div class="hero-sub">クレジットカード不要・登録なし・今すぐ使える</div>
 </section>
